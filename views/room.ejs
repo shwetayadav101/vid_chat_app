@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>SlowPork on VideoChat</title>
+   <link rel="icon" href="https://media.giphy.com/media/eK1o6U80dTs1VT6OtQ/giphy.gif">
+   <script>
+      const ROOM_ID = "<%= roomId %>"
+   </script>
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+   <script defer src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js"></script>
+   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+   <script src="/socket.io/socket.io.js" defer></script>
+   <link rel="stylesheet" href="room_style.css">
+   <script src="https://kit.fontawesome.com/c939d0e917.js"></script>
+   <script src="room_script.js" defer></script>
+   <style>
+      #video-grid{
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         flex-wrap: wrap;
+      }
+      video{
+         border: 1px solid white;
+         height: 300px;
+         width: 400px;
+         object-fit: cover;
+         padding: 8px;
+         flex:0.25;
+         pointer-events: none;
+      }
+
+       @media only screen and (max-width: 600px) {
+         video{
+         border: 1px solid white;
+         height: 200px;
+         width: 300px;
+         object-fit: cover;
+         padding: 8px;
+         flex:0.25;
+      }
+      }
+   </style>
+</head>
+<body>
+
+   <section id="info_modal" class="info_modal">
+      <div class="info_modal_container">
+         <div class="nav-modal-info">
+            <span onclick="__close_info_modal()" id="close">&times;</span>
+         </div>
+         <div class="info_show_roomId">
+            <img class="info-img"style="width: 100px; height: 100px;"src="https://media.giphy.com/media/9rv5h6l4CgOVazv8bc/giphy.gif" alt="">   
+            <h2>Room ID : </h2>
+            <h2 id="enter_roomId"></h2>
+         </div>
+         
+      </div>
+   </section>
+   <section id = "modal" class="modal">
+      <div class="modal-container">
+         <form action="javascript:void(0)">
+            <img class="modal-img-1" style="height: 200px; width: 200px;" src="https://media.giphy.com/media/1AjDhs1ooZZ3m5wlHG/giphy.gif" alt="SlowPork on packet delivery" >
+            <input style="padding: 5px;"id="username_input"class="input-custom" name="username" placeholder="Enter user name" required />
+            <button type="submit" onclick="__modal_init()" class=" modal-join-btn btn btn-outline-success ">Join Meeing</button>
+         </form>
+         <br/>
+         <hr>
+         <div class="info-box-modal">
+            <p>SlowPork use WebRTC to connect you with your friends. <a href="https://webrtc.org/" target="_blank"><strong>
+               Click here to know more. </strong></a></p>
+         </div>
+      </div>
+   </section>
+   <section class="room-nav-bar">
+      <div class="trans-room-nav-bar-left">
+      </div>
+      <div class="vib-room-nav-bar-right">
+         <div class="vib-nav-container">
+            <span class="nav-room-link username-show"id="enter_username"></span>
+            <span class = "chat-link nav-room-link " onclick="__hide_chat_window()" id="chat_toggel">Chat</span>
+            <span><img style="height: 50px; width: 50px;"src="https://media.giphy.com/media/eK1o6U80dTs1VT6OtQ/giphy.gif" /></span>
+         </div>
+      </div>
+
+   </section>
+   <section class="main">
+      <div class="main__left">
+         <div class="main__videos">
+            <div id="video-grid">
+            </div>
+         </div>
+         <div class="main__controls">
+            <div class="main__controls__block">
+               <div onclick="muteUnmute()" class="main__controls__button main__mute_button">
+                  <i class="fas fa-microphone"></i>
+                  <span>Mute</span>
+               </div>
+               <div onclick="playStop()" class="main__controls__button main__video_button" >
+                  <i class="fas fa-video"></i>
+                  <span>Stop Video</span>
+               </div>
+            </div>
+            <div class="main__controls__block">
+               <div onclick="__show_info()" class="main__controls__button info_button">
+                  <i class="fas fa-users"></i>
+                  <span>Info</span>
+               </div>
+            </div>
+            <div class="main__controls__block">
+               <div class="main__controls__button">
+                  <form action="/" method="GET">
+                     <button type="submit" class=" btn leave_meeting btn-outline-danger ">Leave Meeting</button>
+                  </form>   
+               </div>
+            </div>
+         </div>
+      </div>
+      <div class="main__right" id="chat_window">
+         <div class="main__chat_window">
+            <ul class="messages">
+            </ul>
+
+         </div>
+         <div class="main__message_container">
+            <!-- <input id="chat_message"  class="input_message" type="text" placeholder="Type message here...">
+            <button class="btn btn-primary"onclick="__send_message()"><i class="far fa-paper-plane"></i></button> -->
+            <div class="input-group mb-3">
+               <input type="text" id="chat_message"  class="form-control input_message" placeholder="Type message here..." aria-label="Message" aria-describedby="basic-addon1" maxlength="50">
+               <div class="input-group-prepend">
+                  <button class="input-group-text" id="basic-addon1" onclick="__send_message()"><i class="far fa-paper-plane"></i></button>
+                </div>
+             </div>
+         </div>
+      </div>
+   </section>
+</body>
+</html>
